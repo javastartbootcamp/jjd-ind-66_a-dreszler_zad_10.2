@@ -5,6 +5,7 @@ public class CardPhoneContract extends PhoneContract {
     protected double smsCost;
     protected double mmsCost;
     protected double callCostPerMinute;
+    protected static final double NO_FUNDS = 0;
 
     public CardPhoneContract(double accountBalance, double smsCost, double mmsCost, double callCostPerMinute) {
         this.accountBalance = accountBalance;
@@ -15,12 +16,12 @@ public class CardPhoneContract extends PhoneContract {
 
     @Override
     void sendSms() {
-        double balanceAfterSend = accountBalance - smsCost;
-        if (doubleEqualToZero(balanceAfterSend)) {
+        if (areDoublesEqual(accountBalance, smsCost)) {
             accountBalance = 0;
+            smsSentPrompt();
             sentSmsCount++;
-        } else if (balanceAfterSend > 0) {
-            accountBalance = balanceAfterSend;
+        } else if (accountBalance > smsCost) {
+            accountBalance -= smsCost;
             smsSentPrompt();
             sentSmsCount++;
         } else {
@@ -30,17 +31,17 @@ public class CardPhoneContract extends PhoneContract {
 
     @Override
     void call(int seconds) {
-        double balanceAfterCall = accountBalance - getCallCostPerSecond() * seconds;
+        double callCost = getCallCostPerSecond() * seconds;
 
-        if (doubleEqualToZero(accountBalance)) {
+        if (areDoublesEqual(accountBalance, NO_FUNDS)) {
             callFailureZeroBalancePrompt();
-        } else if (doubleEqualToZero(balanceAfterCall)) {
+        } else if (areDoublesEqual(callCost, accountBalance)) {
             callSecondsCount += seconds;
             accountBalance = 0;
             callSuccessfulPrompt(seconds);
-        } else if (balanceAfterCall > 0) {
+        } else if (accountBalance > callCost) {
             callSecondsCount += seconds;
-            accountBalance = balanceAfterCall;
+            accountBalance -= callCost;
             callSuccessfulPrompt(seconds);
         } else {
             int duration = getSecondsOfCallAvailableForCurrentBalance();
@@ -52,13 +53,12 @@ public class CardPhoneContract extends PhoneContract {
 
     @Override
     void sendMms() {
-        double balanceAfterSend = accountBalance - mmsCost;
-        if (doubleEqualToZero(balanceAfterSend)) {
+        if (areDoublesEqual(accountBalance, mmsCost)) {
             accountBalance = 0;
             mmsSentPrompt();
             sentMmsCount++;
-        } else if (balanceAfterSend > 0) {
-            accountBalance = balanceAfterSend;
+        } else if (accountBalance > mmsCost) {
+            accountBalance -= mmsCost;
             mmsSentPrompt();
             sentMmsCount++;
         } else {
@@ -68,8 +68,8 @@ public class CardPhoneContract extends PhoneContract {
 
     @Override
     void printAccountState() {
-        final String NO_ADDITIONAL_PLAN_INFO = "";
-        System.out.println(getAccountState(NO_ADDITIONAL_PLAN_INFO));
+        final String noAdditionalPlanInfo = "";
+        System.out.println(getAccountState(noAdditionalPlanInfo));
     }
 
     protected String getAccountState(String additionalPlanInfo) {

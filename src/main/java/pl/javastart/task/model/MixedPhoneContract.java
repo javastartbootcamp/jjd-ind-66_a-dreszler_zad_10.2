@@ -4,6 +4,7 @@ public class MixedPhoneContract extends CardPhoneContract {
     private int smsLimit;
     private int mmsLimit;
     private double minuteLimit;
+    private static final double LIMIT_USED_UP = 0;
 
     public MixedPhoneContract(double accountBalance, double smsCost, double mmsCost, double callCostPerMinute,
                               int smsLimit, int mmsLimit, double minuteLimit) {
@@ -37,19 +38,21 @@ public class MixedPhoneContract extends CardPhoneContract {
 
     @Override
     void call(int seconds) {
-        double minuteLimitAfterCall = minuteLimit - convertSecondsToMinutes(seconds);
-        if (minuteLimitAfterCall > 0) {
-            minuteLimit = minuteLimitAfterCall;
+        double callLengthInMinutes = convertSecondsToMinutes(seconds);
+        if (minuteLimit > callLengthInMinutes) {
+            minuteLimit -= callLengthInMinutes;
+            callSecondsCount += seconds;
             super.callSuccessfulPrompt(seconds);
-        } else if (doubleEqualToZero(minuteLimitAfterCall)) {
-            minuteLimit = 0;
+        } else if (areDoublesEqual(minuteLimit, callLengthInMinutes)) {
+            minuteLimit = LIMIT_USED_UP;
+            callSecondsCount += seconds;
             super.callSuccessfulPrompt(seconds);
         } else {
             int minuteLimitInSeconds = convertMinutesToSeconds(minuteLimit);
             int secondsRemaining = seconds - minuteLimitInSeconds;
             callSecondsCount += minuteLimitInSeconds;
             super.call(secondsRemaining);
-            minuteLimit = 0;
+            minuteLimit = LIMIT_USED_UP;
         }
 //        Stara wersja metody. Zastąpiona ze względu na powtarzalność kodu.
 //        if (doubleEqualToZero(minuteLimit)) {

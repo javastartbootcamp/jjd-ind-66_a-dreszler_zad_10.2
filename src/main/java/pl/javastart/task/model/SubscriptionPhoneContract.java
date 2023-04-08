@@ -1,6 +1,6 @@
 package pl.javastart.task.model;
 
-public class SubscriptionPhoneContract extends PhoneContract{
+public class SubscriptionPhoneContract extends PhoneContract {
     private double serviceCharge;
 
     public SubscriptionPhoneContract(double serviceCharge) {

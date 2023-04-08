@@ -1,14 +1,18 @@
 package pl.javastart.task.model;
 
-abstract public class PhoneContract {
+public abstract class PhoneContract {
     protected int sentSmsCount;
     protected int sentMmsCount;
     protected int callSecondsCount;
 
     abstract void sendSms();
+
     abstract void call(int seconds);
+
     abstract void sendMms();
+
     abstract void printAccountState();
+
     protected String getAccountState() {
         return "=== STAN KONTA ===\n" + "Wysłanych SMSów: " + sentSmsCount + "\nWysłanych MMSów: " + sentMmsCount +
                 "\nLiczba sekund rozmowy: " + callSecondsCount + "\n";
@@ -44,10 +48,10 @@ abstract public class PhoneContract {
 
     //Utilsy do przeliczeń - nie wiem czy nie powinny być gdzieś wydzielone
 
-    protected boolean doubleEqualToZero(double d1) {
+    protected boolean areDoublesEqual(double d1, double d2) {
         //To dodałem gdy się okazało że gdy po następnym smsie będzie 0 na koncie, to pokazywało że nie ma środków
         double epsilon = 0.000001d;
-        return Math.abs(d1) < epsilon;
+        return Math.abs(d1 - d2) < epsilon;
     }
 
     protected double roundToTwoDigits(double number) {
