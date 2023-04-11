@@ -15,64 +15,48 @@ public class CardPhoneContract extends PhoneContract {
     }
 
     @Override
-    void sendSms() {
-        if (areDoublesEqual(accountBalance, smsCost)) {
-            accountBalance = 0;
-            smsSentPrompt();
-            sentSmsCount++;
-        } else if (accountBalance > smsCost) {
+    boolean sendSms() {
+        if (accountBalance >= smsCost) {
             accountBalance -= smsCost;
-            smsSentPrompt();
             sentSmsCount++;
+            return true;
         } else {
-            smsSendFailureZeroBalancePrompt();
+            return false;
         }
     }
 
     @Override
-    void call(int seconds) {
+    boolean call(int seconds) {
         double callCost = getCallCostPerSecond() * seconds;
 
-        if (areDoublesEqual(accountBalance, NO_FUNDS)) {
-            callFailureZeroBalancePrompt();
-        } else if (areDoublesEqual(callCost, accountBalance)) {
-            callSecondsCount += seconds;
-            accountBalance = 0;
-            callSuccessfulPrompt(seconds);
-        } else if (accountBalance > callCost) {
-            callSecondsCount += seconds;
+        if (accountBalance == 0) {
+            return false;
+        } else if (accountBalance >= callCost) {
+            callSecondsCount += getCallDuration(seconds);
             accountBalance -= callCost;
-            callSuccessfulPrompt(seconds);
-        } else {
-            int duration = getSecondsOfCallAvailableForCurrentBalance();
-            callInterruptedZeroBalancePrompt(duration);
-            callSecondsCount += duration;
-            accountBalance = 0;
+            return true;
         }
+
+        return false;
     }
 
     @Override
-    void sendMms() {
-        if (areDoublesEqual(accountBalance, mmsCost)) {
-            accountBalance = 0;
-            mmsSentPrompt();
-            sentMmsCount++;
-        } else if (accountBalance > mmsCost) {
+    boolean sendMms() {
+        if (accountBalance >= mmsCost) {
             accountBalance -= mmsCost;
-            mmsSentPrompt();
             sentMmsCount++;
+            return true;
         } else {
-            mmsSendFailureZeroBalancePrompt();
+            return false;
         }
     }
 
     @Override
-    void printAccountState() {
-        final String noAdditionalPlanInfo = "";
-        System.out.println(getAccountState(noAdditionalPlanInfo));
+    protected String getAccountState() {
+        return super.getAccountState() + getRemainingAccountBalance();
     }
 
-    protected String getAccountState(String additionalPlanInfo) {
+    String getAccountState(String additionalPlanInfo) {
         return super.getAccountState() + additionalPlanInfo + getRemainingAccountBalance();
     }
 
@@ -84,7 +68,25 @@ public class CardPhoneContract extends PhoneContract {
         return callCostPerMinute / 60;
     }
 
-    protected int getSecondsOfCallAvailableForCurrentBalance() {
+    int getSecondsOfCallAvailableForCurrentBalance() {
         return (int) Math.round(accountBalance / getCallCostPerSecond());
+    }
+
+    double getCallCost(int seconds) {
+        return getCallCostPerSecond() * seconds;
+    }
+
+    @Override
+    boolean wasCallInterrupted(int seconds) {
+        return seconds > getSecondsOfCallAvailableForCurrentBalance();
+    }
+
+    @Override
+    int getCallDuration(int seconds) {
+        if (getSecondsOfCallAvailableForCurrentBalance() >= seconds) {
+            return seconds;
+        } else {
+            return getSecondsOfCallAvailableForCurrentBalance();
+        }
     }
 }

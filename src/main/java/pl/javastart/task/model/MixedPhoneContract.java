@@ -15,44 +15,40 @@ public class MixedPhoneContract extends CardPhoneContract {
     }
 
     @Override
-    void sendSms() {
+    boolean sendSms() {
         if (smsLimit > 0) {
             smsLimit--;
             sentSmsCount++;
-            smsSentPrompt();
+            return true;
         } else {
-            super.sendSms();
+            return super.sendSms();
         }
     }
 
     @Override
-    void sendMms() {
+    boolean sendMms() {
         if (mmsLimit > 0) {
             mmsLimit--;
             sentMmsCount++;
-            mmsSentPrompt();
+            return true;
         } else {
-            super.sendMms();
+            return super.sendMms();
         }
     }
 
     @Override
-    void call(int seconds) {
+    boolean call(int seconds) {
         double callLengthInMinutes = convertSecondsToMinutes(seconds);
         if (minuteLimit > callLengthInMinutes) {
             minuteLimit -= callLengthInMinutes;
             callSecondsCount += seconds;
-            super.callSuccessfulPrompt(seconds);
-        } else if (areDoublesEqual(minuteLimit, callLengthInMinutes)) {
-            minuteLimit = LIMIT_USED_UP;
-            callSecondsCount += seconds;
-            super.callSuccessfulPrompt(seconds);
+            return true;
         } else {
             int minuteLimitInSeconds = convertMinutesToSeconds(minuteLimit);
             int secondsRemaining = seconds - minuteLimitInSeconds;
             callSecondsCount += minuteLimitInSeconds;
-            super.call(secondsRemaining);
             minuteLimit = LIMIT_USED_UP;
+            return super.call(secondsRemaining);
         }
 //        Stara wersja metody. Zastąpiona ze względu na powtarzalność kodu.
 //        if (doubleEqualToZero(minuteLimit)) {
@@ -80,20 +76,33 @@ public class MixedPhoneContract extends CardPhoneContract {
 //        }
     }
 
-    @Override
-    protected void callSuccessfulPrompt(int seconds) {
-        super.callSuccessfulPrompt(seconds + convertMinutesToSeconds(minuteLimit));
+    private double minuteLimitInSeconds() {
+        return convertMinutesToSeconds(minuteLimit);
     }
 
     @Override
-    protected void callInterruptedZeroBalancePrompt(int duration) {
-        super.callInterruptedZeroBalancePrompt(duration + convertMinutesToSeconds(minuteLimit));
+    int getSecondsOfCallAvailableForCurrentBalance() {
+        return super.getSecondsOfCallAvailableForCurrentBalance() + convertMinutesToSeconds(minuteLimit);
     }
 
     @Override
-    void printAccountState() {
-        String additionalPlanInfo = "Zostało darmowych SMSów: " + smsLimit + "\nZostało darmowych MMSów: " +
-                mmsLimit + "\nZostało darmowych minut: " + minuteLimit + "\n";
-        System.out.println(getAccountState(additionalPlanInfo));
+    boolean wasCallInterrupted(int seconds) {
+        return seconds > minuteLimitInSeconds() + getSecondsOfCallAvailableForCurrentBalance();
+    }
+
+    @Override
+    int getCallDuration(int seconds) {
+        if (seconds >= minuteLimit + getSecondsOfCallAvailableForCurrentBalance()) {
+            return seconds;
+        } else {
+            return getSecondsOfCallAvailableForCurrentBalance();
+        }
+    }
+
+    @Override
+    protected String getAccountState() {
+        String limitInfo = String.format("Darmowe SMSy: %d\nDarmowe MMSy: %d\nDarmowe minuty: %.2f", smsLimit, mmsLimit,
+                minuteLimit);
+        return super.getAccountState(limitInfo);
     }
 }

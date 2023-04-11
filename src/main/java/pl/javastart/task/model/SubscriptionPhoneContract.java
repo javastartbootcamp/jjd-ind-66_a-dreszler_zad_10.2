@@ -8,26 +8,21 @@ public class SubscriptionPhoneContract extends PhoneContract {
     }
 
     @Override
-    void sendSms() {
+    boolean sendSms() {
         sentSmsCount++;
-        smsSentPrompt();
+        return true;
     }
 
     @Override
-    void call(int seconds) {
+    boolean call(int seconds) {
         callSecondsCount += seconds;
-        callSuccessfulPrompt(seconds);
+        return true;
     }
 
     @Override
-    void sendMms() {
+    boolean sendMms() {
         sentMmsCount++;
-        mmsSentPrompt();
-    }
-
-    @Override
-    void printAccountState() {
-        System.out.println(getAccountState());
+        return true;
     }
 
     @Override
@@ -35,7 +30,17 @@ public class SubscriptionPhoneContract extends PhoneContract {
         return super.getAccountState() + getServiceCharge();
     }
 
-    protected String getServiceCharge() {
+    private String getServiceCharge() {
         return String.format("Kwota abonamentu: %.2f\n", serviceCharge);
+    }
+
+    @Override
+    int getCallDuration(int seconds) {
+        return seconds;
+    }
+
+    @Override
+    boolean wasCallInterrupted(int seconds) {
+        return false;
     }
 }
