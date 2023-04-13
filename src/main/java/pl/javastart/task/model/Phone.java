@@ -8,7 +8,7 @@ public class Phone {
     }
 
     public void sendSms() {
-        if (phoneContract.sendSms()) {
+        if (phoneContract.canSendSms()) {
             smsSentPrompt();
         } else {
             smsSendFailure();
@@ -16,7 +16,7 @@ public class Phone {
     }
 
     public void sendMms() {
-        if (phoneContract.sendMms()) {
+        if (phoneContract.canSendMms()) {
             mmsSentPrompt();
         } else {
             mmsSendFailure();
@@ -24,46 +24,47 @@ public class Phone {
     }
 
     public void call(int seconds) {
-        if (phoneContract.call(seconds)) {
-            int callDuration = phoneContract.getCallDuration(seconds);
-            if (phoneContract.wasCallInterrupted(seconds))
-                callInterrupted(callDuration);
-            else
-                callSuccessfulPrompt(seconds);
-        } else {
+        int callDuration = phoneContract.getCallDuration(seconds);
+
+        if (callDuration == seconds) {
+            callSuccessfulPrompt(seconds);
+        } else if (callDuration == 0) {
             callFailure();
+        } else {
+            callInterrupted(callDuration);
         }
     }
 
     public void printAccountState() {
-        System.out.println(phoneContract.getAccountState());
+        String accountState = phoneContract.getAccountState();
+        System.out.println(accountState);
     }
 
-    protected void smsSentPrompt() {
+    private void smsSentPrompt() {
         System.out.println("SMS wysłany");
     }
 
-    protected void smsSendFailure() {
+    private void smsSendFailure() {
         System.out.println("Nie udało się wysłać SMSa - brak środków");
     }
 
-    protected void mmsSentPrompt() {
+    private void mmsSentPrompt() {
         System.out.println("MMS wysłany");
     }
 
-    protected void mmsSendFailure() {
+    private void mmsSendFailure() {
         System.out.println("Nie udało się wysłać MMSa - brak środków");
     }
 
-    protected void callFailure() {
+    private void callFailure() {
         System.out.println("Nie można wykonać połączenia - brak środków");
     }
 
-    protected void callSuccessfulPrompt(int seconds) {
+    private void callSuccessfulPrompt(int seconds) {
         System.out.println("Wykonano połączenie. Połączenie trwało " + seconds + " sekund");
     }
 
-    protected void callInterrupted(int duration) {
-        System.out.println("Przerwano połączenie - brak środków. Połączenie trwało " + duration + "sekund");
+    private void callInterrupted(int duration) {
+        System.out.println("Przerwano połączenie - brak środków. Połączenie trwało " + duration + " sekund");
     }
 }

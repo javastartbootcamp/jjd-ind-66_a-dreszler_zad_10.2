@@ -5,13 +5,11 @@ public abstract class PhoneContract {
     protected int sentMmsCount;
     protected int callSecondsCount;
 
-    abstract boolean sendSms();
+    abstract boolean canSendSms();
 
-    abstract boolean call(int seconds);
-
-    abstract boolean sendMms();
-    abstract boolean wasCallInterrupted(int seconds);
     abstract int getCallDuration(int seconds);
+
+    abstract boolean canSendMms();
 
     protected String getAccountState() {
         return "=== STAN KONTA ===\n" + "Wysłanych SMSów: " + sentSmsCount + "\nWysłanych MMSów: " + sentMmsCount +

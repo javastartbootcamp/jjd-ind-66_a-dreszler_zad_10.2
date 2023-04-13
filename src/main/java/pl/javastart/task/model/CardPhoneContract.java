@@ -5,7 +5,6 @@ public class CardPhoneContract extends PhoneContract {
     protected double smsCost;
     protected double mmsCost;
     protected double callCostPerMinute;
-    protected static final double NO_FUNDS = 0;
 
     public CardPhoneContract(double accountBalance, double smsCost, double mmsCost, double callCostPerMinute) {
         this.accountBalance = accountBalance;
@@ -15,7 +14,7 @@ public class CardPhoneContract extends PhoneContract {
     }
 
     @Override
-    boolean sendSms() {
+    boolean canSendSms() {
         if (accountBalance >= smsCost) {
             accountBalance -= smsCost;
             sentSmsCount++;
@@ -26,22 +25,25 @@ public class CardPhoneContract extends PhoneContract {
     }
 
     @Override
-    boolean call(int seconds) {
+    int getCallDuration(int seconds) {
         double callCost = getCallCostPerSecond() * seconds;
+        int duration = 0;
 
-        if (accountBalance == 0) {
-            return false;
-        } else if (accountBalance >= callCost) {
-            callSecondsCount += getCallDuration(seconds);
+        if (accountBalance >= callCost) {
+            duration = seconds;
+            callSecondsCount += duration;
             accountBalance -= callCost;
-            return true;
+        } else {
+            duration = getSecondsOfCallAvailableForCurrentBalance();
+            callSecondsCount += duration;
+            accountBalance = 0;
         }
 
-        return false;
+        return duration;
     }
 
     @Override
-    boolean sendMms() {
+    boolean canSendMms() {
         if (accountBalance >= mmsCost) {
             accountBalance -= mmsCost;
             sentMmsCount++;
@@ -70,23 +72,5 @@ public class CardPhoneContract extends PhoneContract {
 
     int getSecondsOfCallAvailableForCurrentBalance() {
         return (int) Math.round(accountBalance / getCallCostPerSecond());
-    }
-
-    double getCallCost(int seconds) {
-        return getCallCostPerSecond() * seconds;
-    }
-
-    @Override
-    boolean wasCallInterrupted(int seconds) {
-        return seconds > getSecondsOfCallAvailableForCurrentBalance();
-    }
-
-    @Override
-    int getCallDuration(int seconds) {
-        if (getSecondsOfCallAvailableForCurrentBalance() >= seconds) {
-            return seconds;
-        } else {
-            return getSecondsOfCallAvailableForCurrentBalance();
-        }
     }
 }
